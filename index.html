@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Playerok Deals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        :root {
+            --pk-blue: #2563EB;
+            --pk-blue-2: #1E50FF;
+            --pk-bg: #0a1838;
+            --line: rgba(255,255,255,0.14);
+            --line-2: rgba(255,255,255,0.26);
+            --txt: #ffffff;
+            --txt-2: #c5d3ee;
+            --txt-3: #7c8db0;
+        }
+        html, body { background: var(--pk-bg); }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--txt);
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background:
+                radial-gradient(1100px 600px at 50% -10%, rgba(37,99,235,0.55) 0%, rgba(37,99,235,0) 60%),
+                linear-gradient(180deg, #0a1838 0%, #08122b 60%, #060d20 100%);
+            background-attachment: fixed;
+        }
+
+        /* ===== Animated falling Pl logos ===== */
+        .coin-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .coin {
+            position: absolute;
+            top: -120px;
+            user-select: none;
+            animation-name: fall;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+            will-change: transform;
+        }
+        .coin svg { width: 100%; height: 100%; display: block; }
+        @keyframes fall {
+            0%   { transform: translateY(-120px) rotate(0deg); }
+            100% { transform: translateY(115vh) rotate(360deg); }
+        }
+        .content-wrapper { position: relative; z-index: 1; }
+
+        /* ===== UI ===== */
+        .text-mono-gradient {
+            background: linear-gradient(180deg, #ffffff 0%, #b5c8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card-bg {
+            background-color: rgba(18,36,81,0.78);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--line);
+        }
+        .stat-card {
+            background: linear-gradient(145deg, rgba(18,36,81,0.92) 0%, rgba(37,99,235,0.30) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--line-2);
+            box-shadow: 0 4px 30px rgba(37,99,235,0.18);
+        }
+        .nav-item.active { color: #ffffff; }
+        .nav-item { color: var(--txt-3); transition: color 0.3s; }
+        .content-area { padding-bottom: 120px; }
+        .bottom-fixed {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(0deg, rgba(6,13,32,1) 80%, rgba(6,13,32,0) 100%);
+            padding: 10px 20px 20px 20px;
+            z-index: 50;
+        }
+        .accordion-content {
+            transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+            max-height: 0; overflow: hidden;
+            padding-top: 0; padding-bottom: 0;
+        }
+        .accordion-content.open { max-height: 500px; padding-top: 0.5rem; padding-bottom: 1rem; }
+        .white-btn { background: linear-gradient(180deg, #ffffff 0%, #d8e2ff 100%); color: #1a3170; }
+        .blue-btn  { background: linear-gradient(180deg, #2563EB 0%, #1E50FF 100%); color: #ffffff; }
+        .logo-hero { filter: drop-shadow(0 0 30px rgba(80,140,255,0.65)); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Reusable SVG symbol: Playerok "Pl" tile -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs>
+            <linearGradient id="pk-tile" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#2F73FF"/>
+                <stop offset="100%" stop-color="#1E50FF"/>
+            </linearGradient>
+            <symbol id="playerok-logo" viewBox="0 0 200 200">
+                <rect x="6" y="6" width="188" height="188" rx="34" ry="34" fill="url(#pk-tile)"/>
+                <rect x="6" y="6" width="188" height="188" rx="34" ry="34" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+                <text x="100" y="105" text-anchor="middle" dominant-baseline="central"
+                      font-family="Inter, Arial, sans-serif" font-weight="900"
+                      font-size="118" letter-spacing="-2" fill="#ffffff">Pl</text>
+            </symbol>
+        </defs>
+    </svg>
+
+    <!-- Animated falling Pl logos background -->
+    <div class="coin-bg" id="coin-bg"></div>
+
+    <div class="content-wrapper flex-grow flex flex-col">
+
+    <!-- Header -->
+    <div class="flex flex-col items-center pt-8 pb-4">
+        <div class="logo-hero w-28 h-28 mb-4">
+            <svg width="100%" height="100%" viewBox="0 0 200 200"><use href="#playerok-logo"/></svg>
+        </div>
+        <h1 class="text-3xl font-black tracking-widest text-mono-gradient mb-1">PLAYEROK</h1>
+        <h2 class="text-base font-bold tracking-[0.3em] text-white/70 mb-2">DEALS</h2>
+        <div class="text-xs tracking-[0.2em] text-gray-500 font-bold mb-3 uppercase">мини-приложение</div>
+        <div class="text-sm text-gray-400 text-center px-6">
+            Гарант-сервис безопасных внебиржевых сделок 24/7
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex justify-between px-4 mb-6 border-b border-white/10 pb-2">
+        <div class="nav-item active flex flex-col items-center text-xs gap-1 cursor-pointer w-1/5" onclick="switchTab('stats', this)">
+            <i class="fa-solid fa-chart-line text-lg mb-1"></i><span>Статистика</span>
+        </div>
+        <div class="nav-item flex flex-col items-center text-xs gap-1 cursor-pointer w-1/5" onclick="switchTab('features', this)">
+            <i class="fa-solid fa-gears text-lg mb-1"></i><span>Функции</span>
+        </div>
+        <div class="nav-item flex flex-col items-center text-xs gap-1 cursor-pointer w-1/5" onclick="switchTab('sponsors', this)">
+            <i class="fa-solid fa-star text-lg mb-1"></i><span>Партнёры</span>
+        </div>
+        <div class="nav-item flex flex-col items-center text-xs gap-1 cursor-pointer w-1/5" onclick="switchTab('profile', this)">
+            <i class="fa-solid fa-user text-lg mb-1"></i><span>Профиль</span>
+        </div>
+        <div class="nav-item flex flex-col items-center text-xs gap-1 cursor-pointer w-1/5" onclick="switchTab('help', this)">
+            <i class="fa-solid fa-circle-question text-lg mb-1"></i><span>Помощь</span>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-grow px-4 content-area" id="main-content">
+
+        <!-- Stats Tab -->
+        <div id="tab-stats" class="tab-content">
+            <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+                    <span class="text-sm font-semibold text-gray-300">Онлайн сейчас</span>
+                </div>
+                <div class="text-5xl font-black mb-2 text-white tracking-wider" id="online-count" style="text-shadow: 0 0 20px rgba(255,255,255,0.25);">128 471</div>
+                <div class="text-gray-400 text-sm mb-4">Активных пользователей</div>
+                <div class="text-xs text-gray-500">Обновление через: <span id="timer">4:55</span></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-3">
+                <div class="card-bg p-4 rounded-xl">
+                    <div class="text-xs text-gray-500 mb-1">Сделок за сутки</div>
+                    <div class="text-2xl font-black text-mono-gradient">3 482</div>
+                </div>
+                <div class="card-bg p-4 rounded-xl">
+                    <div class="text-xs text-gray-500 mb-1">Оборот</div>
+                    <div class="text-2xl font-black text-mono-gradient">$1.2M</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Tab -->
+        <div id="tab-features" class="tab-content hidden">
+            <h2 class="text-xl font-bold mb-4 text-mono-gradient">Функции</h2>
+            <div class="space-y-3">
+                <div class="card-bg p-4 rounded-xl flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full blue-btn flex items-center justify-center"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div>
+                        <div class="font-bold text-sm">Безопасная сделка</div>
+                        <div class="text-xs text-gray-400">Автоматическое удержание средств гарантом</div>
+                    </div>
+                </div>
+                <div class="card-bg p-4 rounded-xl flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full blue-btn flex items-center justify-center"><i class="fa-solid fa-coins"></i></div>
+                    <div>
+                        <div class="font-bold text-sm">Любые валюты</div>
+                        <div class="text-xs text-gray-400">Фиат, крипта, NFT, Stars</div>
+                    </div>
+                </div>
+                <div class="card-bg p-4 rounded-xl flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full blue-btn flex items-center justify-center"><i class="fa-solid fa-headset"></i></div>
+                    <div>
+                        <div class="font-bold text-sm">Поддержка 24/7</div>
+                        <div class="text-xs text-gray-400">Решаем споры в режиме реального времени</div>
+                    </div>
+                </div>
+                <div class="card-bg p-4 rounded-xl flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full blue-btn flex items-center justify-center"><i class="fa-solid fa-bolt"></i></div>
+                    <div>
+                        <div class="font-bold text-sm">Мгновенные выплаты</div>
+                        <div class="text-xs text-gray-400">Перевод после подтверждения сделки</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sponsors Tab -->
+        <div id="tab-sponsors" class="tab-content hidden">
+            <div class="space-y-3">
+                <a href="https://playerok.com" target="_blank" class="card-bg p-4 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center">
+                            <svg width="40" height="40" viewBox="0 0 200 200"><use href="#playerok-logo"/></svg>
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm">Playerok Marketplace</div>
+                            <div class="text-xs text-blue-200/70">Официальная площадка</div>
+                            <div class="text-xs text-white/80 hover:underline">playerok.com ➔</div>
+                        </div>
+                    </div>
+                    <div class="text-[10px] font-bold blue-btn px-2 py-1 rounded">TOP</div>
+                </a>
+                <a href="https://t.me/PIayerokGiftRelayer" target="_blank" class="card-bg p-4 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl blue-btn flex items-center justify-center"><i class="fa-solid fa-headset"></i></div>
+                        <div>
+                            <div class="font-bold text-sm">Поддержка</div>
+                            <div class="text-xs text-blue-200/70">Связаться с оператором</div>
+                            <div class="text-xs text-white/80 hover:underline">@PIayerokGiftRelayer ➔</div>
+                        </div>
+                    </div>
+                    <div class="text-[10px] font-bold bg-red-600 text-white px-2 py-1 rounded">24/7</div>
+                </a>
+                <a href="https://telegra.ph/Pravila-i-usloviya-soglasheniya-Garant-botom-Playerok-05-24" target="_blank" class="card-bg p-4 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl blue-btn flex items-center justify-center"><i class="fa-solid fa-file-contract"></i></div>
+                        <div>
+                            <div class="font-bold text-sm">Правила сервиса</div>
+                            <div class="text-xs text-blue-200/70">Условия соглашения с гарантом</div>
+                            <div class="text-xs text-white/80 hover:underline">telegra.ph/Pravila... ➔</div>
+                        </div>
+                    </div>
+                    <div class="text-[10px] font-bold bg-white text-blue-700 px-2 py-1 rounded">DOC</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="tab-profile" class="tab-content hidden">
+            <h2 class="text-xl font-bold mb-4 text-mono-gradient">Профиль</h2>
+            <div class="card-bg p-4 rounded-xl text-center">
+                <div class="w-16 h-16 rounded-full blue-btn mx-auto flex items-center justify-center text-2xl mb-3"><i class="fa-solid fa-user"></i></div>
+                <div class="font-bold" id="tg-username">@username</div>
+                <div class="text-sm text-gray-400 mb-4" id="tg-id">ID: 123456789</div>
+                <div class="grid grid-cols-2 gap-2 text-left">
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/10">
+                        <div class="text-xs text-gray-500">Сделок</div>
+                        <div class="font-bold text-mono-gradient text-lg">0</div>
+                    </div>
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/10">
+                        <div class="text-xs text-gray-500">Баланс</div>
+                        <div class="font-bold text-mono-gradient text-lg">0.00 $</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Tab -->
+        <div id="tab-help" class="tab-content hidden">
+            <h2 class="text-xl font-bold mb-4 text-mono-gradient">Помощь</h2>
+            <div class="space-y-2">
+                <div class="card-bg rounded-xl px-4 py-3">
+                    <div class="flex justify-between items-center cursor-pointer" onclick="toggleAccordion(this)">
+                        <div class="font-bold text-sm">Как создать сделку?</div>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform"></i>
+                    </div>
+                    <div class="accordion-content text-sm text-gray-300">
+                        Откройте бота, нажмите «Создать сделку» и выберите валюту. Поделитесь ссылкой со 2-м участником.
+                    </div>
+                </div>
+                <div class="card-bg rounded-xl px-4 py-3">
+                    <div class="flex justify-between items-center cursor-pointer" onclick="toggleAccordion(this)">
+                        <div class="font-bold text-sm">Какая комиссия?</div>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform"></i>
+                    </div>
+                    <div class="accordion-content text-sm text-gray-300">Комиссия сервиса — 1% от суммы сделки.</div>
+                </div>
+                <div class="card-bg rounded-xl px-4 py-3">
+                    <div class="flex justify-between items-center cursor-pointer" onclick="toggleAccordion(this)">
+                        <div class="font-bold text-sm">Что если возник спор?</div>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform"></i>
+                    </div>
+                    <div class="accordion-content text-sm text-gray-300">
+                        Нажмите «Спор» внутри сделки или напишите в поддержку <a href="https://t.me/PIayerokGiftRelayer" target="_blank" class="text-white underline">@PIayerokGiftRelayer</a> — оператор подключится 24/7.
+                    </div>
+                </div>
+                <div class="card-bg rounded-xl px-4 py-3">
+                    <div class="flex justify-between items-center cursor-pointer" onclick="toggleAccordion(this)">
+                        <div class="font-bold text-sm">Какие валюты поддерживаются?</div>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform"></i>
+                    </div>
+                    <div class="accordion-content text-sm text-gray-300">TON, USDT, BTC, ETH, LTC, SOL, TRX, Telegram Stars, NFT и фиат (RUB, KZT, BYN, UAH, USD, EUR и др.).</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom CTA -->
+    <div class="bottom-fixed">
+        <a href="https://t.me/PIayerokGiftRelayer" target="_blank" class="white-btn w-full text-center py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(80,140,255,0.45)]">
+            <i class="fa-solid fa-headset"></i> Связаться с поддержкой
+        </a>
+    </div>
+
+    </div><!-- /.content-wrapper -->
+
+    <script>
+        // Telegram init
+        try {
+            const tg = window.Telegram && window.Telegram.WebApp;
+            if (tg) {
+                tg.ready();
+                tg.expand();
+                try { tg.setHeaderColor('#0a1838'); } catch(e){}
+                try { tg.setBackgroundColor('#0a1838'); } catch(e){}
+                const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+                if (u) {
+                    document.getElementById('tg-username').textContent = '@' + (u.username || (u.first_name || 'user'));
+                    document.getElementById('tg-id').textContent = 'ID: ' + u.id;
+                }
+            }
+        } catch(e) {}
+
+        // Tabs
+        function switchTab(name, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-' + name).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // Accordion
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('i');
+            content.classList.toggle('open');
+            if (icon) icon.style.transform = content.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        // Live timer
+        let secs = 295;
+        setInterval(() => {
+            secs = secs > 0 ? secs - 1 : 295;
+            const m = Math.floor(secs/60), s = String(secs%60).padStart(2,'0');
+            const t = document.getElementById('timer');
+            if (t) t.textContent = m + ':' + s;
+        }, 1000);
+
+        // Online counter jitter around 93k
+        (function jitterOnline() {
+            const el = document.getElementById('online-count');
+            if (!el) return;
+            let base = 128471;
+            setInterval(() => {
+                base += Math.floor(Math.random() * 11) - 5; // ±5
+                if (base < 128100) base = 128100 + Math.floor(Math.random()*40);
+                if (base > 129000) base = 129000 - Math.floor(Math.random()*40);
+                el.textContent = base.toLocaleString('ru-RU').replace(/,/g, ' ');
+            }, 3500);
+        })();
+
+        // ===== Animated falling Pl logos =====
+        (function initCoins() {
+            const bg = document.getElementById('coin-bg');
+            const COUNT = 22;
+            for (let i = 0; i < COUNT; i++) {
+                const c = document.createElement('div');
+                c.className = 'coin';
+                const size = 28 + Math.random() * 54;       // 28-82px
+                const dur  = 11 + Math.random() * 16;       // 11-27s
+                const delay = -Math.random() * dur;         // staggered start
+                const left = Math.random() * 100;
+                const opacity = 0.08 + Math.random() * 0.18; // 0.08-0.26
+                c.style.left = left + 'vw';
+                c.style.width = size + 'px';
+                c.style.height = size + 'px';
+                c.style.animationDuration = dur + 's';
+                c.style.animationDelay = delay + 's';
+                c.style.opacity = opacity;
+                c.innerHTML = '<svg viewBox="0 0 200 200"><use href="#playerok-logo"/></svg>';
+                bg.appendChild(c);
+            }
+        })();
+    </script>
+</body>
+</html>
